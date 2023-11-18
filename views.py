@@ -73,6 +73,8 @@ def fetch_health_news(selected_country):
 #     print("URL:", article["url"])
 #     print("\n")
 
+def map_yes_no_to_int(value):
+    return 1 if value.lower() == "yes" else 0
 
 @views.route('/appointment', methods=['GET', 'POST'])
 @login_required
@@ -92,6 +94,12 @@ def appointment():
             flash('Please fill in all required fields.', category='error')
             return redirect(url_for('views.appointment'))
 
+        # Map "Yes" to 1 and "No" to 0 for relevant fields
+        dehydration_int = map_yes_no_to_int(dehydration)
+        vomiting_int = map_yes_no_to_int(vomiting)
+        diarrhea_int = map_yes_no_to_int(diarrhea)
+        abdominal_pain_int = map_yes_no_to_int(abdominal_pain)
+
         # Create a new Appointment instance and add it to the database
         appointment = Appointment(
             full_name=full_name,
@@ -104,6 +112,23 @@ def appointment():
             note=note,
             student=current_user
         )
+       # Make a request to FastAPI endpoint for model prediction
+        fastapi_url = "http://localhost:8000/predict"  
+        payload = {
+            "dehydration": dehydration_int,
+            "vomiting": vomiting_int,
+            "diarrhea": diarrhea_int,
+            "abdominal_pain": abdominal_pain_int,
+            "symptom_count": symptom_count
+        }
+
+        response = requests.post(fastapi_url, json=payload)
+
+        if response.status_code == 200:
+            diagnosis = response.json().get("diagnosis")
+            flash(f'Diagnosis: {diagnosis}', category='success')
+        else:
+            flash('Error getting diagnosis.', category='error')
 
         db.session.add(appointment)
         db.session.commit()
