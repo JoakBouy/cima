@@ -21,11 +21,12 @@ class Appointment(db.Model):
     full_name = db.Column(db.String(150), nullable=False)
     note = db.Column(db.String(150), nullable=False)
     phone_number = db.Column(db.String(150), nullable=False)
-    appointment_date = db.Column(db.String(150), nullable=False)
-    appointment_time = db.Column(db.String(150), nullable=False)
-    hospital_name = db.Column(db.String(150), nullable=False)
-    student_user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    student = db.relationship('User', foreign_keys=[student_user_id])
+    dehydration = db.Column(db.String(150)) 
+    vomiting = db.Column(db.String(150))
+    diarrhea = db.Column(db.String(150))
+    Abdominal_pain = db.Column(db.String(150))
+    note = db.Column(db.String(150), nullable=False)
+    symptom_count = db.Column(db.Integer)
 
     def __repr__(self):
         return f'{self.full_name} {self.note} {self.appointment_date} {self.appointment_time} {self.phone_number} {self.hospital_name}'

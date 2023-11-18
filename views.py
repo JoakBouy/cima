@@ -74,61 +74,45 @@ def fetch_health_news(selected_country):
 #     print("\n")
 
 
-def is_appointment_date_available(appointment_date):
-    appointment_date_available = Appointment.query.filter_by(appointment_date=appointment_date).first()
-    for appointment_date_slot in appointment_date_available:
-        if appointment_date_available == appointment_date:
-            flash('Appointment date is not available.', category='error')
-            return False
-        else:
-            return True
-
-
-def is_appointment_time_available(appointment_time):
-    appointment_time_available = Appointment.query.filter_by(appointment_time=appointment_time).first()
-    for appointment_time_slot in appointment_time_available:
-        if appointment_time_available == appointment_time:
-            flash('Appointment time is not available.', category='error')
-            return False
-        else:
-            return True
-
-
 @views.route('/appointment', methods=['GET', 'POST'])
 @login_required
 def appointment():
     if request.method == 'POST':
         full_name = request.form.get('full_name')
-        note = request.form.get('note')
+        dehydration = request.form.get('dehydration')
+        vomiting = request.form.get('vomiting')
+        diarrhea = request.form.get('diarrhea')
+        abdominal_pain = request.form.get('abdominal_pain')
+        symptom_count = request.form.get('symptom_count')
         phone_number = request.form.get('phone_number')
-        appointment_date = request.form.get('appointment_date')
-        appointment_time = request.form.get('appointment_time')
-        hospital_name = request.form.get('hospital_name')
+        note = request.form.get('note')
 
-        if not full_name:
-            flash('Full name is required.', category='error')
-        elif not hospital_name:
-            flash('Hospital name is required.', category='error')
-        elif not note:
-            flash('Note is required.', category='error')
-        elif not phone_number:
-            flash('Phone number is required.', category='error')
-        elif not appointment_date:
-            if not is_appointment_date_available(appointment_date):
-                return redirect(url_for('views.appointment'))
-        elif not appointment_time:
-            if not is_appointment_time_available(appointment_time):
-                return redirect(url_for('views.appointment'))
+        # Validate form data
+        if not full_name or not phone_number or not note:
+            flash('Please fill in all required fields.', category='error')
+            return redirect(url_for('views.appointment'))
 
-        appointment_id = Appointment(full_name=full_name, note=note, phone_number=phone_number,
-                                     appointment_date=appointment_date, appointment_time=appointment_time,
-                                     hospital_name=hospital_name,
-                                     student=current_user)
-        db.session.add(appointment_id)
+        # Create a new Appointment instance and add it to the database
+        appointment = Appointment(
+            full_name=full_name,
+            dehydration=dehydration,
+            vomiting=vomiting,
+            diarrhea=diarrhea,
+            abdominal_pain=abdominal_pain,
+            symptom_count=symptom_count,
+            phone_number=phone_number,
+            note=note,
+            student=current_user
+        )
+
+        db.session.add(appointment)
         db.session.commit()
-        flash('Appointment created successfully.')
+
+        flash('Symptom diagnosis submitted successfully.', category='success')
         return redirect(url_for('views.dashboard'))
+
     return render_template('appointment.html', user=current_user)
+
 
 
 @views.errorhandler(404)
