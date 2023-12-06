@@ -28,19 +28,39 @@
         <div class="appointments__container">
             {% for appointment in appointments %}
             <div class="appointment">
-                <h2>Name: {{appointment.full_name}}</h2>
-                <p>Date: {{appointment.appointment_date}}</p>
-                <p>Time: {{appointment.appointment_time}}</p>
-                <p>Hospital: {{appointment.hospital_name}}</p>
-                <p>Phone Number: {{appointment.phone_number}}</p>
-                <h4>Notes: {{appointment.note}}</h4>
-
-
+                <h2>Name: {{ appointment.full_name }}</h2>
+                <p>Phone Number: {{ appointment.phone_number }}</p>
+                <h4>Notes: {{ appointment.note }}</h4>
+    
+                {% if appointment.dehydration %}
+                    <p>Dehydration: {{ appointment.dehydration }}</p>
+                {% endif %}
+    
+                {% if appointment.vomiting %}
+                    <p>Vomiting: {{ appointment.vomiting }}</p>
+                {% endif %}
+    
+                {% if appointment.diarrhea %}
+                    <p>Diarrhea: {{ appointment.diarrhea }}</p>
+                {% endif %}
+    
+                {% if appointment.abdominal_pain %}
+                    <p>Abdominal Pain: {{ appointment.abdominal_pain }}</p>
+                {% endif %}
+    
+                {% if appointment.symptom_count %}
+                    <p>Symptom Count: {{ appointment.symptom_count }}</p>
+                {% endif %}
+                {% if appointment.diagnosis %}
+                    <p>Diagnosis: {{ appointment.diagnosis }}</p>
+                {% else %}
+                    <p>Diagnosis: Pending</p>
+                {% endif %}
             </div>
             {% endfor %}
         </div>
-
     </section>
+    
 
   
 </body>

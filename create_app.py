@@ -5,6 +5,7 @@ import os
 from dotenv import load_dotenv
 from flask_migrate import Migrate
 
+
 load_dotenv()
 
 DB_NAME = "cima.db"
@@ -12,7 +13,7 @@ DB_NAME = "cima.db"
 
 base_dir = os.path.dirname(os.path.realpath(__file__))
 
-uri = os.getenv("DATABASE_URL")  # or other relevant config var
+uri = 'postgresql://buoy:sudanman@localhost:5432/cima'# or other relevant config var
 if uri.startswith('postgres://'):
     uri = uri.replace('postgres://', 'postgresql://', 1)
 

@@ -4,6 +4,12 @@ from logging.config import fileConfig
 from flask import current_app
 
 from alembic import context
+from sqlalchemy.dialects import postgresql
+# Your database connection URL
+DATABASE_URL = "postgresql://buoy:sudanman@localhost:5432/cima"
+
+# Set the URL in the Alembic context
+context.config.set_main_option("sqlalchemy.url", DATABASE_URL)
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

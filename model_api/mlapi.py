@@ -23,18 +23,19 @@ class SymptomData(BaseModel):
 
 # Prediction endpoint
 @app.post("/predict")
-async def predict_cholera(request: CholeraPredictionRequest):
+async def predict_cholera(request: SymptomData):
     
     # Format input data
     input_data = [
-        request.sex, 
         request.vomiting,
         request.diarrhea,
         request.abdominal_cramps, 
-        request.dehydration
-        request.symptom_count
+        request.dehydration,
+        request.symptom_count,
     ]
-    
+
+    print(request.json) # print full request body
+
     # Make prediction
     prediction = model.predict([input_data])[0]
     

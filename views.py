@@ -18,7 +18,7 @@ def index():  # put application's code here
 @views.route('/dashboard')
 @login_required
 def dashboard():
-    appointments = Appointment.query.filter_by(student=current_user).all()
+    appointments = Appointment.query.filter_by(user=current_user).all()
     return render_template("dashboard.html", appointments=appointments)
 
 
@@ -73,70 +73,80 @@ def fetch_health_news(selected_country):
 #     print("URL:", article["url"])
 #     print("\n")
 
-def map_yes_no_to_int(value):
-    return 1 if value.lower() == "yes" else 0
 
 @views.route('/appointment', methods=['GET', 'POST'])
 @login_required
 def appointment():
     if request.method == 'POST':
-        full_name = request.form.get('full_name')
-        dehydration = request.form.get('dehydration')
-        vomiting = request.form.get('vomiting')
-        diarrhea = request.form.get('diarrhea')
-        abdominal_pain = request.form.get('abdominal_pain')
-        symptom_count = request.form.get('symptom_count')
-        phone_number = request.form.get('phone_number')
-        note = request.form.get('note')
+        try:
+            full_name = request.form.get('full_name')
+            dehydration = request.form.get('dehydration', '0')  # Default to '0' if not provided
+            vomiting = request.form.get('vomiting', '0')  # Default to '0' if not provided
+            diarrhea = request.form.get('diarrhea', '0')  # Default to '0' if not provided
+            abdominal_pain = request.form.get('abdominal_pain', '0')  # Default to '0' if not provided
+            symptom_count = request.form.get('symptom_count', 0)  # Default to 0 if not provided
+            phone_number = request.form.get('phone_number')
+            note = request.form.get('note')
 
-        # Validate form data
-        if not full_name or not phone_number or not note:
-            flash('Please fill in all required fields.', category='error')
+            # Validate form data
+            if not full_name or not phone_number or not note:
+                flash('Please fill in all required fields.', category='error')
+                return redirect(url_for('views.appointment'))
+
+            # Map "Yes" to 1 and "No" to 0 for relevant fields
+            dehydration_int = 1 if dehydration.lower() == "yes" else 0
+            vomiting_int = 1 if vomiting.lower() == "yes" else 0
+            diarrhea_int = 1 if diarrhea.lower() == "yes" else 0
+            abdominal_pain_int = 1 if abdominal_pain.lower() == "yes" else 0
+
+            # Create a new Appointment instance and add it to the database
+            appointment = Appointment(
+                full_name=full_name,
+                dehydration=dehydration,
+                vomiting=vomiting,
+                diarrhea=diarrhea,
+                abdominal_pain=abdominal_pain,
+                symptom_count=symptom_count,
+                phone_number=phone_number,
+                note=note,
+                user=current_user  # Assuming you have a user relationship in Appointment model
+            )
+
+            # Make a request to FastAPI endpoint for model prediction
+            fastapi_url = "http://localhost:8000/predict"
+            payload = {
+                "dehydration": 1,
+                "vomiting": 0,
+                "diarrhea": 1,
+                "abdominal_pain": 1,
+                "symptom_count": 3,
+            }
+
+            response = requests.post(fastapi_url, json=payload)
+            print(payload)
+            response = requests.post(fastapi_url, json=payload)
+
+            if response.status_code == 200:
+                diagnosis = response.json().get("diagnosis")
+                appointment.diagnosis = diagnosis  # Assuming you have a 'diagnosis' column in your Appointment model
+                flash(f'Diagnosis: {diagnosis}', category='success')
+            else:
+                flash('Error getting diagnosis.', category='error')
+
+            db.session.add(appointment)
+            db.session.commit()
+
+            flash('Symptom diagnosis submitted successfully.', category='success')
+            return redirect(url_for('views.dashboard'))
+
+        except Exception as e:
+            flash(f'Error: {e}', category='error')
+            app.logger.error(f"Error in appointment route: {e}")
             return redirect(url_for('views.appointment'))
 
-        # Map "Yes" to 1 and "No" to 0 for relevant fields
-        dehydration_int = map_yes_no_to_int(dehydration)
-        vomiting_int = map_yes_no_to_int(vomiting)
-        diarrhea_int = map_yes_no_to_int(diarrhea)
-        abdominal_pain_int = map_yes_no_to_int(abdominal_pain)
-
-        # Create a new Appointment instance and add it to the database
-        appointment = Appointment(
-            full_name=full_name,
-            dehydration=dehydration,
-            vomiting=vomiting,
-            diarrhea=diarrhea,
-            abdominal_pain=abdominal_pain,
-            symptom_count=symptom_count,
-            phone_number=phone_number,
-            note=note,
-            student=current_user
-        )
-       # Make a request to FastAPI endpoint for model prediction
-        fastapi_url = "http://localhost:8000/predict"  
-        payload = {
-            "dehydration": dehydration_int,
-            "vomiting": vomiting_int,
-            "diarrhea": diarrhea_int,
-            "abdominal_pain": abdominal_pain_int,
-            "symptom_count": symptom_count
-        }
-
-        response = requests.post(fastapi_url, json=payload)
-
-        if response.status_code == 200:
-            diagnosis = response.json().get("diagnosis")
-            flash(f'Diagnosis: {diagnosis}', category='success')
-        else:
-            flash('Error getting diagnosis.', category='error')
-
-        db.session.add(appointment)
-        db.session.commit()
-
-        flash('Symptom diagnosis submitted successfully.', category='success')
-        return redirect(url_for('views.dashboard'))
-
     return render_template('appointment.html', user=current_user)
+
+
 
 
 
